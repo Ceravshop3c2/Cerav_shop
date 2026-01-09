@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Shop Experience</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #e67e22;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            margin: 0;
+            background: url('https://th.bing.com/th/id/R.126b483a0c3753beffd9667a92075d41?rik=xN6jzo3%2fyW29JQ&riu=http%3a%2f%2fbebeautycostarica.com%2fcdn%2fshop%2fcollections%2fCeraVe-Category-Page-Image-Myskincaremall.png%3fv%3d1701624602&ehk=zLNV5Sp5M%2fQ02XA%2bK02c50RxjLRK8m%2fKaShEtMUBXyU%3d&risl=&pid=ImgRaw&r=0') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+        }
+
+        /* หน้าแรก (Welcome Screen) */
+        #welcome-screen {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            text-align: center;
+        }
+
+        .enter-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .enter-btn:hover { transform: scale(1.1); box-shadow: 0 0 20px rgba(230,126,34,0.5); }
+
+        /* การจัดการหน้า (Layout) */
+        .page { display: none; padding: 20px; max-width: 1000px; margin: 40px auto; background: rgba(255,255,255,0.95); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+
+        nav { background: var(--primary); padding: 15px; display: flex; justify-content: space-around; position: sticky; top: 0; z-index: 100; }
+        nav a { color: white; text-decoration: none; font-weight: 300; cursor: pointer; }
+
+        /* สินค้า */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { border: none; background: white; padding: 15px; border-radius: 15px; text-align: center; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-10px); }
+        .card img { width: 100%; border-radius: 10px; height: 200px; object-fit: cover; }
+
+        /* รายละเอียดสินค้า */
+        .detail-box { display: flex; gap: 30px; align-items: center; }
+        .detail-img { width: 40%; border-radius: 15px; }
+
+        /* ใบเสร็จทางการ */
+        #receipt-area { border: 2px solid #333; padding: 40px; background: white; color: black; line-height: 1.6; }
+        .receipt-header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .receipt-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .receipt-table th, .receipt-table td { border-bottom: 1px dashed #ccc; padding: 10px; text-align: left; }
+
+        .hidden-print { margin-top: 20px; }
+        @media print { .hidden-print, nav { display: none; } body { background: white; } .page { box-shadow: none; margin: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="welcome-screen">
+        <h1 style="font-size: 4rem; margin-bottom: 10px;">SKILL CAREVE MOISTURISING CRAME</h1>
+        <p style="font-size: 1.2rem; font-weight: 200; margin-bottom: 30px;">ยินดีต้อนรับสู่ประสบการณ์ช้อปปิ้งระดับพรีเมียม</p>
+        <button class="enter-btn" onclick="goToStore()">คลิกเข้าร้านค้า</button>
+    </div>
+
+    <nav id="main-nav" style="display: none;">
+        <a onclick="showPage('shop')">สินค้า</a>
+        <a onclick="showPage('reg')">สมัครสมาชิก</a>
+        <a onclick="showPage('cart')">ตะกร้า (<span id="cart-count">0</span>)</a>
+    </nav>
+
+    <div id="shop" class="page">
+        <h2 style="text-align: center;">รายการสินค้า</h2>
+        <div class="grid" id="product-grid"></div>
+    </div>
+
+    <div id="product-detail" class="page">
+        <button onclick="showPage('shop')" style="border:none; cursor:pointer; padding:5px 15px; border-radius:5px; margin-bottom:15px;">← กลับ</button>
+        <div id="detail-content" class="detail-box"></div>
+    </div>
+
+    <div id="reg" class="page">
+        <h2>สมัครสมาชิกพิเศษ</h2>
+        <p>สมัครวันนี้รับส่วนลดทันที 15% พร้อมของแถม "สำลีเช็คผิวหน้า"</p>
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            <input type="text" id="uname" placeholder="ชื่อ-นามสกุล" style="padding: 10px; border:1px solid #ccc; border-radius:5px;">
+            <input type="tel" id="uphone" placeholder="เบอร์โทรศัพท์" style="padding: 10px; border:1px solid #ccc; border-radius:5px;">
+            <button class="enter-btn" onclick="registerUser()">ยืนยันสมัครสมาชิก</button>
+        </div>
+    </div>
+
+    <div id="cart" class="page">
+        <div id="receipt-area">
+            <div class="receipt-header">
+                <h2>OFFICIAL RECEIPT</h2>
+                <p>LUXE STORE THAILAND</p>
+                <small>วันที่: <span id="r-date"></span> | เวลา: <span id="r-time"></span></small>
+            </div>
+            <p><strong>ชื่อลูกค้า:</strong> <span id="r-name">-</span></p>
+            <p><strong>เบอร์โทร:</strong> <span id="r-phone">-</span></p>
+            <table class="receipt-table">
+                <thead><tr><th>รายการ</th><th>ราคา</th></tr></thead>
+                <tbody id="r-items"></tbody>
+            </table>
+            <div id="promo-section" style="color: green; font-weight: 600;"></div>
+            <h3 style="text-align: right;">ยอดรวมสุทธิ: <span id="r-total">0</span> บาท</h3>
+        </div>
+        
+        <div class="hidden-print">
+            <button class="enter-btn" style="width: 100%; margin-bottom:10px; background:#27ae60;" onclick="confirmOrder()">ยืนยันการสั่งซื้อ</button>
+            <button class="enter-btn" style="width: 100%; background:#2c3e50;" onclick="window.print()">พิมพ์ใบเสร็จ (Save as PDF)</button>
+            <button onclick="clearCart()" style="margin-top: 10px; background: none; border: none; color: gray; cursor: pointer; width:100%;">ล้างตะกร้าสินค้า</button>
+        </div>
+    </div>
+
+    <script>
+        // โหลดข้อมูลสินค้าจากแอดมิน (localStorage) หรือใช้ข้อมูลเริ่มต้นหากไม่มี
+        let products = JSON.parse(localStorage.getItem('my_stock')) || [
+           {id: 1, name: 'Hydrating Cleanser (473ml)', price: 540, img: 'https://linkarta.ae/wp-content/uploads/2022/12/CeraVe-Hydrating-Facial-Cleanser473ml.jpg', desc: 'ล้างหน้าสะอาดโดยไม่ทำให้ผิวแห้งตึง เหมาะสำหรับผิวแห้ง-แพ้ง่าย มีเซราไมด์คืนความชุ่มชื้น'},
+
+            {id: 2, name: 'Foaming Cleanser (473ml)', price: 540, img: 'https://skinsmart.co.za/wp-content/uploads/2022/03/3337875597357_1.png', desc: 'เจลล้างหน้ามีฟอง อ่อนโยนแต่ขจัดความมันส่วนเกินได้ดีเยี่ยม เหมาะสำหรับผิวธรรมดาถึงผิวมัน'},
+
+            {id: 3, name: 'Moisturising Cream (454g)', price: 795, img: 'https://www.beautybase.com/images/cerave-moisturising-cream-dry-to-very-dry-454g-tubg-tub-p66348-20753_image.jpg', desc: 'เนื้อครีมเข้มข้นด้วยเทคโนโลยี MVE ปล่อยความชุ่มชื้นตลอดวัน แก้ผิวลอก ผิวแห้งกร้านได้ดี'},
+
+            {id: 4, name: 'Moisturising Lotion (473ml)', price: 540, img: 'https://www.foleyschemist.ie/wp-content/uploads/2021/05/CeraVe-Moisturising-Lotion-473ml.jpg', desc: 'โลชั่นเนื้อน้ำนม บางเบา ไม่เหนียวเหนอะหนะ ใช้ได้ทั้งใบหน้าและลำตัว ให้ผิวเนียนนุ่ม'},
+
+            {id: 5, name: 'SA Smoothing Cleanser (236ml)', price: 550, img: 'https://static.chemistwarehouse.co.nz/ams/media/pi/102298/2DF_800.jpg', desc: 'ผ้ายีนส์ญี่ปุ่น ฟอกนุ่ม ทรงสวยใส่สบาย'},
+
+            {id: 6, name: 'AM Facial Moisturising (52ml)', price: 650, img: 'https://www.gosupps.com/media/catalog/product/5/1/51yyXYZVrPL.jpg', desc: 'รองเท้าหนังแท้ ดีไซน์เรียบหรู เข้าได้กับทุกชุด'},
+
+            {id: 7, name: 'PM Facial Moisturising (52ml)', price: 650, img: 'https://www.qhealthpharmacy.ie/wp-content/uploads/2020/07/CeraVe-PM-Facial-Moisturising-Lotion-52ml.jpg', desc: 'รองเท้าหนังแท้ ดีไซน์เรียบหรู เข้าได้กับทุกชุด'},
+
+            {id: 8, name: 'Resurfacing Retinol (30ml) ', price: 850, img: 'https://tse2.mm.bing.net/th/id/OIP.giXws6N_UeY93YMHTIFqKwHaIG?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'เนื้อผ้า Cotton 100% ระบายอากาศได้ดีเยี่ยม'},
+
+            {id: 9, name: 'Vitamin C Serum (30ml)', price: 950, img: 'https://zara.pk/wp-content/uploads/2023/04/Cerave-Skin-Renewing-Vitamin-C-Serum-30Ml.jpg', desc: 'ผ้ายีนส์ญี่ปุ่น ฟอกนุ่ม ทรงสวยใส่สบาย'},
+
+            {id: 10, name: 'Reparative Hand Cream (50ml)', price: 250, img: 'https://murphyspharmacyennis.ie/wp-content/uploads/2021/10/3337875597319_CeraVe_Reparative_Hand_Cream_50ml.jpg', desc: 'รองเท้าหนังแท้ ดีไซน์เรียบหรู เข้าได้กับทุกชุด'}
+        ];
+
+        let cart = [];
+        let userData = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+        function goToStore() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('main-nav').style.display = 'flex';
+            showPage('shop');
+            renderProducts();
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'cart') renderReceipt();
+        }
+
+        function renderProducts() {
+            // ดึงข้อมูลใหม่จาก localStorage ทุกครั้งที่โหลดหน้า shop
+            const latestStock = JSON.parse(localStorage.getItem('my_stock')) || products;
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = latestStock.map(p => `
+                <div class="card">
+                    <img src="${p.img}">
+                    <h3>${p.name}</h3>
+                    <p>${p.price} บาท</p>
+                    <button onclick="viewDetail(${p.id})" style="border:none; padding:5px; border-radius:5px; cursor:pointer;">ดูรายละเอียด</button>
+                    <button class="enter-btn" style="font-size: 0.8rem; padding: 5px 15px;" onclick="add(${p.id})">ลงตะกร้า</button>
+                </div>
+            `).join('');
+        }
+
+        function viewDetail(id) {
+            const latestStock = JSON.parse(localStorage.getItem('my_stock')) || products;
+            const p = latestStock.find(i => i.id == id);
+            document.getElementById('detail-content').innerHTML = `
+                <img src="${p.img}" class="detail-img">
+                <div>
+                    <h1>${p.name}</h1>
+                    <p style="color: gray;">${p.desc}</p>
+                    <h2 style="color: var(--accent);">${p.price} บาท</h2>
+                    <button class="enter-btn" onclick="add(${p.id})">เพิ่มลงตะกร้า</button>
+                </div>
+            `;
+            showPage('product-detail');
+        }
+
+        function add(id) {
+            const latestStock = JSON.parse(localStorage.getItem('my_stock')) || products;
+            const p = latestStock.find(i => i.id == id);
+            cart.push(p);
+            document.getElementById('cart-count').innerText = cart.length;
+            alert("เพิ่มเข้าตะกร้าแล้ว!");
+        }
+
+        function registerUser() {
+            userData = {
+                name: document.getElementById('uname').value,
+                phone: document.getElementById('uphone').value
+            };
+            if(!userData.name || !userData.phone) return alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            localStorage.setItem('currentUser', JSON.stringify(userData));
+            alert("สมัครสมาชิกสำเร็จ! คุณได้รับส่วนลด 15% แล้ว");
+            showPage('shop');
+        }
+
+        function renderReceipt() {
+            const now = new Date();
+            document.getElementById('r-date').innerText = now.toLocaleDateString('th-TH');
+            document.getElementById('r-time').innerText = now.toLocaleTimeString('th-TH');
+            
+            if(userData) {
+                document.getElementById('r-name').innerText = userData.name;
+                document.getElementById('r-phone').innerText = userData.phone;
+            }
+
+            let html = "";
+            let total = 0;
+            cart.forEach(item => {
+                html += `<tr><td>${item.name}</td><td>${item.price}</td></tr>`;
+                total += item.price;
+            });
+            
+            let promoDiv = document.getElementById('promo-section');
+            if(userData && cart.length > 0) {
+                let discount = total * 0.15;
+                total = total - discount;
+                promoDiv.innerHTML = `<p>ส่วนลดสมาชิก (15%): -${discount} บาท<br>ของแถม: ผ้าเช็ดทำความสะอาดพรีเมียม (1 ชิ้น)</p>`;
+            } else {
+                promoDiv.innerHTML = "";
+            }
+
+            document.getElementById('r-items').innerHTML = html || "<tr><td colspan='2' style='text-align:center'>ไม่มีสินค้าในตะกร้า</td></tr>";
+            document.getElementById('r-total').innerText = total.toLocaleString();
+        }
+
+        // ฟังก์ชันสั่งซื้อส่งข้อมูลไปหน้าแอดมิน
+        function confirmOrder() {
+            if(cart.length === 0) return alert("ไม่มีสินค้าในตะกร้า");
+            if(!userData) return alert("กรุณาสมัครสมาชิกก่อนสั่งซื้อ");
+
+            // ดึงออเดอร์เก่ามาเพื่อเพิ่มอันใหม่เข้าไป
+            let orders = JSON.parse(localStorage.getItem('my_orders')) || [];
+            let totalAmt = document.getElementById('r-total').innerText;
+
+            const newOrder = {
+                id: Date.now(),
+                time: new Date().toLocaleString('th-TH'),
+                user: userData.name,
+                tel: userData.phone,
+                items: cart.map(i => i.name).join(', '),
+                total: totalAmt,
+                status: 'รอจัดส่ง'
+            };
+
+            orders.push(newOrder);
+            localStorage.setItem('my_orders', JSON.stringify(orders));
+
+            alert("สั่งซื้อสำเร็จ! ข้อมูลของคุณถูกส่งไปยังระบบจัดการแล้ว");
+            clearCart();
+            showPage('shop');
+        }
+
+        function clearCart() {
+            cart = [];
+            document.getElementById('cart-count').innerText = 0;
+            renderReceipt();
+        }
+    </script>
+</body>
+</html>
